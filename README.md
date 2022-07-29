@@ -35,7 +35,7 @@ This will find all traces with the occurrence of an exception containing the str
 
 ```
 xray traces --start 60 -f 'rootcause.error.exception { message CONTAINS "not authorized" }'
-```.
+```
 
 Useful to find misconfigured IAM policies.
 

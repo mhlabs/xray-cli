@@ -46,7 +46,7 @@ async function run(cmd) {
     const traceChoice = await inputUtil.autocomplete(
       "Select a trace",
       traces.map((t) => {
-        
+
         const hasError = t.HasFault || t.HasError || t.FaultRootCauses.length || t.ErrorRootCauses.length;
         return { name: `${t.EntryPoint ? t.EntryPoint.Name : "Unknown"} - ${t.Duration} seconds ${hasError ? ERROR : ""}`, value: t }
       }),
@@ -54,7 +54,7 @@ async function run(cmd) {
 
     let traceResponse = await xray.batchGetTraces({ TraceIds: [traceChoice.Id] }).promise();
     traceResponse = JSON.parse(JSON.stringify(traceResponse).replace(/232740153640/g, "123456789012"));
-    
+
 
     const trace = traceResponse.Traces[0];
     let minStart = 999999999999999;
@@ -87,7 +87,9 @@ async function run(cmd) {
     traceSegments.push({ name: "🚪 Exit", value: `Exit` })
 
     console.log(chalk.blue(`Start time: `) + new Date(minStart * 1000).toISOString());
-    console.log(chalk.blue(`End time:   `) + new Date(maxEnd * 1000).toISOString());
+    if (typeof maxEnd === "number") {
+      console.log(chalk.blue(`End time:   `) + new Date(maxEnd * 1000).toISOString());
+    }
     console.log(chalk.blue(`Total duration:   `) + `${trace.Duration} seconds`);
     do {
       menuChoice = await inputUtil.tree("Select a segment (<space> to expand row)", traceSegments);

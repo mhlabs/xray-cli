@@ -1,6 +1,6 @@
 # xray-cli
 
-Command line tool for quickly analysing AWS X-Ray traces. Get a quick overview of you applications traces to learn about bottlenecks and failure points.
+Command line tool for quickly analysing [AWS X-Ray](https://aws.amazon.com/xray/) traces. Get a quick overview of you applications traces to learn about bottlenecks and failure points.
 
 ![features](https://raw.githubusercontent.com/mhlabs/xray-cli/main/images/features.png)
 

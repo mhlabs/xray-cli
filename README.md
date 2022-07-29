@@ -2,7 +2,7 @@
 
 Command line tool for quickly analysing AWS X-Ray traces. Get a quick overview of you applications traces to learn about bottlenecks and failure points.
 
-![features](images/features.png)
+![features](https://raw.githubusercontent.com/mhlabs/xray-cli/main/images/features.png)
 
 ## Installation
 `npm install -g @mhlabs/xray-cli`
@@ -36,4 +36,4 @@ This will find all traces with the occurrence of an exception containing the str
 
 Refer to [AWS X-Ray documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html) for more information
 
-![Demo](images/demo1.gif)
+![Demo](https://raw.githubusercontent.com/mhlabs/xray-cli/main/images/demo1.gif)

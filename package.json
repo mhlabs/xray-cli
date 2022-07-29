@@ -1,0 +1,25 @@
+{
+  "name": "@mhlabs/xray-cli",
+  "version": "1.0.0",
+  "description": "Command line interface for analysing AWS X-Ray traces",
+  "main": "index.js",
+  "author": "mhlabs",
+  "license": "ISC",
+  "dependencies": {
+    "@mhlabs/aws-sdk-sso": "^0.0.16",
+    "aws-sdk": "^2.1182.0",
+    "chalk": "^4.1.2",
+    "commander": "^9.4.0",
+    "inquirer": "^7.0.4",
+    "inquirer-autocomplete-prompt": "^1.4.0",
+    "inquirer-tree-prompt": "^1.1.2",
+    "link2aws": "^1.0.9",
+    "open": "^8.4.0"
+  },
+  "bin": {
+    "xray": "index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -52,9 +52,7 @@ async function run(cmd) {
       }),
     );
 
-    let traceResponse = await xray.batchGetTraces({ TraceIds: [traceChoice.Id] }).promise();
-    traceResponse = JSON.parse(JSON.stringify(traceResponse).replace(/232740153640/g, "123456789012"));
-
+    const traceResponse = await xray.batchGetTraces({ TraceIds: [traceChoice.Id] }).promise();
 
     const trace = traceResponse.Traces[0];
     let minStart = 999999999999999;

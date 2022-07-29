@@ -31,8 +31,8 @@ Options:
 Run `$ xray traces` to get a sample of the last 5 minutes of traces. Use `--start`, `--end`, `absolute-start` or `--absolute-end` if you know when the execution happened. The smaller time range, the faster retrieval.
 
 #### Using filter expressions
-This will find all traces with the occurrence of an exception containing the string 'not authorized'. Useful to find misconfigured IAM policies.
-`xray traces --start 60 -f 'rootcause.error.exception { message CONTAINS "not authorized" }'
+This will find all traces with the occurrence of an exception containing the string 'not authorized':
+`xray traces --start 60 -f 'rootcause.error.exception { message CONTAINS "not authorized" }'`. Useful to find misconfigured IAM policies.
 
 Refer to [AWS X-Ray documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html) for more information
 

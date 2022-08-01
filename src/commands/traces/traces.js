@@ -107,6 +107,7 @@ async function run(cmd) {
             border: node.Type !== "client",
             truncateIfNeeded: node.Type !== "client",
             Statistics: node.SummaryStatistics,
+            Type: node.Type,
           })
           for (const edge of node.Edges) {
             edges.push({

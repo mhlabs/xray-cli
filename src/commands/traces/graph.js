@@ -32,7 +32,7 @@ async function render(nodes, edges) {
     g.setDefaultEdgeLabel(function () { return {}; });
 
     for (const node of nodes) {
-      g.setNode(node.id, { label: node.label, width: 1, height: 1, hasError: node.hasError, border: node.border, truncateIfNeeded: node.truncateIfNeeded, longLabel: originalNodes.find(n => n.id === node.id).label, statistics: node.Statistics });
+      g.setNode(node.id, { label: node.label, width: 1, height: 1, hasError: node.hasError, border: node.border, truncateIfNeeded: node.truncateIfNeeded, longLabel: originalNodes.find(n => n.id === node.id).label, statistics: node.Statistics, type: node.Type });
     }
 
     for (const edge of edges) {
@@ -47,7 +47,7 @@ async function render(nodes, edges) {
     maxY = -Infinity;
     longestLabel = 0;
     highestY = 0;
-    rows = {};
+    const rows = {};
     for (const node of g.nodes()) {
       const { x, y } = g.node(node);
       minX = Math.min(minX, x);
@@ -56,9 +56,9 @@ async function render(nodes, edges) {
       maxY = Math.max(maxY, y);
       longestLabel = Math.max(longestLabel, g.node(node).label.length);
       highestY = Math.max(highestY, y);
-      rows[y] = 1;
+      rows[y] = minX;
     }
-    
+
     width = Math.max(maxX - minX, 1);
     height = Math.max(maxY - minY, 1);
     screenWidth = process.stdout.columns - longestLabel;
@@ -77,9 +77,9 @@ async function render(nodes, edges) {
     for (let row = 0; row < screenHeight; row++) {
       const filteredNodes = g.nodes().filter(p => g.node(p).y === row);
       const totalLabelLength = filteredNodes.reduce((acc, p) => acc + g.node(p).label.length, 0);
-      const threshold = screenWidth - 2 * filteredNodes.length - 20;
+      const threshold = screenWidth - 2 * filteredNodes.length - 130;
       if (totalLabelLength > threshold) {
-        const div = threshold / totalLabelLength;
+        const div = threshold / totalLabelLength / 1.75;
         for (const node of filteredNodes) {
           if (g.node(node).truncateIfNeeded) {
             nodes.find(p => p.id == node).label = g.node(node).label.substring(0, Math.floor(g.node(node).label.length * div));
@@ -228,13 +228,17 @@ function addItem(node) {
 }
 function addBoxItem(node, scrollIndex) {
   const longLabel = node.longLabel;
-  if (longLabel.length > node.label.length) {
-    let subLabel = longLabel.substring(scrollIndex % longLabel.length, scrollIndex % longLabel.length + node.label.length);
-    subLabel += "|" + longLabel.substring(0, node.label.length - subLabel.length);
+  const length = getBoxWidth(node);
+  if (node.type !== "client") {
+    writeAt(node.x, node.y - 1, node.type.padEnd(length, " "), node.hasError);
+  }
+  if (longLabel.length > length) {
+    let subLabel = longLabel.substring(scrollIndex % longLabel.length, scrollIndex % longLabel.length + length);
+    subLabel += "|" + longLabel.substring(0, length - subLabel.length) + " ";
 
     writeAt(node.x, node.y, subLabel, node.hasError);
   } else {
-    writeAt(node.x, node.y, node.label, node.hasError);
+    writeAt(node.x, node.y, longLabel.padEnd(length, " "), node.hasError);
   }
   if (node.statistics) {
     const str = Math.round(node.statistics.TotalResponseTime * 1000) + "ms";
@@ -247,21 +251,27 @@ function addBoxItem(node, scrollIndex) {
     bottomBorder(node);
   }
 }
+function getBoxWidth(node) {
+  return Math.max(node.type.length, node.label.length);
+}
+
 function topBorder(node) {
-  writeAt(node.x - 1, node.y - 1, "┏".padEnd(node.label.length + 1, "━") + "┓");
+  writeAt(node.x - 1, node.y - 2, "┏".padEnd(getBoxWidth(node) + 1, "━") + "┓");
 }
 function bottomBorder(node) {
   const yOffset = node.statistics ? 2 : 1;
-  writeAt(node.x - 1, node.y + yOffset, "┗".padEnd(node.label.length + 1, "━") + "┛");
+  writeAt(node.x - 1, node.y + yOffset, "┗".padEnd(getBoxWidth(node) + 1, "━") + "┛");
 }
 function leftBorder(node) {
+  writeAt(node.x - 1, node.y - 1, "┃");
   writeAt(node.x - 1, node.y, "┃");
   if (node.statistics) {
     writeAt(node.x - 1, node.y + 1, "┃");
   }
 }
 function rightBorder(node) {
-  const length = node.label.length;
+  const length = getBoxWidth(node);
+  writeAt(node.x + length, node.y - 1, "┃");
   writeAt(node.x + length, node.y, "┃");
   if (node.statistics) {
     writeAt(node.x + length, node.y + 1, "┃");

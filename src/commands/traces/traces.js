@@ -5,6 +5,7 @@ const AWS = require("aws-sdk");
 const link2aws = require('link2aws');
 const open = require("open");
 const chalk = require("chalk");
+const graph = require("./graph");
 const columns = process.stdout.columns;
 let longestRow = 0;
 async function run(cmd) {
@@ -58,6 +59,7 @@ async function run(cmd) {
     let minStart = 999999999999999;
     let maxEnd = 0;
     let segments = [];
+
     let longestName = 0;
     let hasErrors = false;
     for (const segment of trace.Segments) {
@@ -79,6 +81,7 @@ async function run(cmd) {
       traceSegments = getSegments(segments, minStart, maxEnd, width, screenWidth);
     }
 
+    traceSegments.unshift({ name: "🗺️  Show service map", value: "map" });
     traceSegments.unshift({ name: "📜 Trace summary", children: getChildren(traceChoice) })
     traceSegments.unshift({ name: "🌐 Open in AWS console", value: `https://${AWS.config.region}.console.aws.amazon.com/xray/home?region=${AWS.config.region}#/traces/${trace.Id}` })
     traceSegments.unshift({ name: "🔙 Back to trace list", value: `back` })
@@ -91,6 +94,29 @@ async function run(cmd) {
     console.log(chalk.blue(`Total duration:   `) + `${trace.Duration} seconds`);
     do {
       menuChoice = await inputUtil.tree("Select a segment (<space> to expand row)", traceSegments);
+      if (menuChoice === "map") {
+        const traceGraph = await xray.getTraceGraph({ TraceIds: [trace.Id] }).promise();
+        const nodes = [];
+        const edges = [];
+        for (const node of traceGraph.Services) {
+          const hasError = node.SummaryStatistics?.FaultStatistics?.TotalCount || node.SummaryStatistics?.ErrorStatistics?.TotalCount;
+          nodes.push({
+            id: node.ReferenceId,
+            label: node.Type === "client" ? "웃" : node.Name,
+            hasError: hasError,
+            border: node.Type !== "client",
+            truncateIfNeeded: node.Type !== "client",
+            Statistics: node.SummaryStatistics,
+          })
+          for (const edge of node.Edges) {
+            edges.push({
+              from: node.ReferenceId,
+              to: edge.ReferenceId,
+            })
+          }
+        }
+        await graph.render(nodes, edges);        
+      }
       if (typeof menuChoice === "string") {
         if (menuChoice.startsWith("https://")) {
           console.log(`Opening ${menuChoice} in browser...`);

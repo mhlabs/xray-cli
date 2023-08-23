@@ -1,7 +1,8 @@
 const inputUtil = require("../../shared/inputUtil");
-const XRay = require("aws-sdk/clients/xray");
-const xray = new XRay();
-const AWS = require("aws-sdk");
+const { XRayClient, GetTraceSummariesCommand, BatchGetTracesCommand, GetTraceGraphCommand } = require("@aws-sdk/client-xray");
+const { fromSSO } = require("@aws-sdk/credential-provider-sso");
+const { loadSharedConfigFiles } = require('@aws-sdk/shared-ini-file-loader');
+
 const link2aws = require('link2aws');
 const open = require("open");
 const chalk = require("chalk");
@@ -9,6 +10,9 @@ const graph = require("./graph");
 const columns = process.stdout.columns;
 let longestRow = 0;
 async function run(cmd) {
+  const credentials = await fromSSO({ profile: cmd.profile });
+  const region = cmd.region || (await loadSharedConfigFiles()).configFile?.[cmd.profile]?.region;
+  const xray = new XRayClient({ credentials, region});
   console.log("Fetching traces. This can take a while...");
 
   let token;
@@ -24,7 +28,7 @@ async function run(cmd) {
   try {
     do {
 
-      const traceSummaries = await xray.getTraceSummaries({ StartTime: start, EndTime: end, FilterExpression: cmd.filterExpression, NextToken: token }).promise();
+      const traceSummaries = await xray.send(new GetTraceSummariesCommand({ StartTime: start, EndTime: end, FilterExpression: cmd.filterExpression, NextToken: token }));
       token = traceSummaries.NextToken;
 
       traces.push(...traceSummaries.TraceSummaries);
@@ -53,7 +57,7 @@ async function run(cmd) {
       }),
     );
 
-    const traceResponse = await xray.batchGetTraces({ TraceIds: [traceChoice.Id] }).promise();
+    const traceResponse = await xray.send( new BatchGetTracesCommand({ TraceIds: [traceChoice.Id] }));
 
     const trace = traceResponse.Traces[0];
     let minStart = 999999999999999;
@@ -83,7 +87,7 @@ async function run(cmd) {
 
     traceSegments.unshift({ name: "🗺️  Show service map", value: "map" });
     traceSegments.unshift({ name: "📜 Trace summary", children: getChildren(traceChoice) })
-    traceSegments.unshift({ name: "🌐 Open in AWS console", value: `https://${AWS.config.region}.console.aws.amazon.com/xray/home?region=${AWS.config.region}#/traces/${trace.Id}` })
+    traceSegments.unshift({ name: "🌐 Open in AWS console", value: `https://${region}.console.aws.amazon.com/xray/home?region=${region}#/traces/${trace.Id}` })
     traceSegments.unshift({ name: "🔙 Back to trace list", value: `back` })
     traceSegments.push({ name: "🚪 Exit", value: `Exit` })
 
@@ -95,7 +99,7 @@ async function run(cmd) {
     do {
       menuChoice = await inputUtil.tree("Select a segment (<space> to expand row)", traceSegments);
       if (menuChoice === "map") {
-        const traceGraph = await xray.getTraceGraph({ TraceIds: [trace.Id] }).promise();
+        const traceGraph = await xray.send(new GetTraceGraphCommand({ TraceIds: [trace.Id] }));
         const nodes = [];
         const edges = [];
         for (const node of traceGraph.Services) {
@@ -116,7 +120,7 @@ async function run(cmd) {
             })
           }
         }
-        await graph.render(nodes, edges);        
+        await graph.render(nodes, edges);
       }
       if (typeof menuChoice === "string") {
         if (menuChoice.startsWith("https://")) {
@@ -164,8 +168,7 @@ function getSegments(segments, minStart, maxEnd, width, screenWidth) {
       seg.children = seg.children || [];
       seg.children.push({ name: "AWS", children: getChildren(segment.aws) });
     }
-    traceSegments.push(seg);
-    xray.getTraceGraph
+    traceSegments.push(seg);    
   }
   return traceSegments;
 }

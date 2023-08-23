@@ -1,6 +1,5 @@
 const program = require("commander");
 const lib = require("./traces");
-const auth = require("../../shared/auth-helper");
 program
   .command("traces")
   .alias("t")
@@ -12,6 +11,5 @@ program
   .option("-f, --filter-expression <filter>", "Filter expression. Must be inside double or single quotes (\"/')")
   .option("-p, --profile <profile>", "AWS profile to use", "default")
   .action(async (cmd) => {
-    auth.initAuth(cmd);
     await lib.run(cmd);
   });

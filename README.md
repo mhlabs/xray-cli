@@ -23,7 +23,7 @@ Options:
   -as, --absolute-start <start>     Start time (ISO 8601)
   -ae, --absolute-end <end>         End time (ISO 8601)
   -f, --filter-expression <filter>  Filter expression. Must be inside double or single quotes ("/')
-  -p, --profile <profile>           AWS profile to use (default: "default")
+  -p, --profile <profile>           AWS profile to use (default: "default", env: AWS_PROFILE)
   -h, --help                        display help for command
 ```
 

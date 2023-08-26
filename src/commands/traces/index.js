@@ -9,7 +9,7 @@ program
   .option("-as, --absolute-start <start>", "Start time (ISO 8601)")
   .option("-ae, --absolute-end <end>", "End time (ISO 8601)")
   .option("-f, --filter-expression <filter>", "Filter expression. Must be inside double or single quotes (\"/')")
-  .option("-p, --profile <profile>", "AWS profile to use", "default")
+  .addOption(new program.Option("-p, --profile <profile>", "AWS profile to use").default("default").env("AWS_PROFILE"))
   .action(async (cmd) => {
     await lib.run(cmd);
   });
